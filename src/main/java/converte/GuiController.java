@@ -1,21 +1,26 @@
 package converte;
 
+import static java.util.stream.Collectors.toList;
+
+import java.io.File;
 import java.io.IOException;
-import java.util.Date;
-import java.util.concurrent.Callable;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
-import com.google.common.base.Throwables;
-
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
+import converte.files.SimpleFileRecursiveFinder;
+import javafx.collections.FXCollections;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TableView;
+import javafx.scene.input.DragEvent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.scene.text.Text;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
@@ -35,39 +40,45 @@ public class GuiController {
 	private ProgressBar progress;
 
 	@FXML
+	private TableView<SourceFile> tableView;
+
+	@FXML
+	void listDragOver(DragEvent de) {
+		Dragboard board = de.getDragboard();
+		if (board.hasFiles()) {
+			de.acceptTransferModes(TransferMode.ANY);
+		}
+	}
+
+	@FXML
+	void listDropped(DragEvent de) {
+		System.out.println("called list dropped ");
+		Dragboard board = de.getDragboard();
+		List<File> phil = board.getFiles();
+		Stream<SourceFile> sourceFiles = SimpleFileRecursiveFinder.findRecursively(phil);
+		sourceFiles
+			.peek(el -> System.out.println(el))
+			.forEach(tableView.getItems()::add);
+	}
+
+	@FXML
 	protected void convertAction(ActionEvent event) {
 		convertButton.setDisable(true);
-		Service<Void> s = new Service<Void>() {
-			@Override
-			protected Task<Void> createTask() {
-				final Task<Void> task = new Task<Void>() {
-					@Override
-					protected Void call() throws Exception {
-						doTheThing(percent -> updateProgress(percent, 100d));
-						return null;
-					}
-				};
-				task.progressProperty().addListener(new ChangeListener<Number>() {
-					@Override
-					public void changed(ObservableValue<? extends Number> observable, Number oldValue,
-							Number newValue) {
-						progress.setProgress(newValue.doubleValue());
-					}
-				});
-				//task.onSucceededProperty()
-				return task;
-			}
-		};
+		Service<Void> s = new FfmpegConvertService();
+		progress.progressProperty().bind(s.progressProperty());
 		s.setOnRunning(running -> {
+			progress.setDisable(false);
 			actiontarget.setText("Converting...");
 		});
 		s.setOnSucceeded(success -> {
 			actiontarget.setText("Converted");
 			convertButton.setDisable(false);
+			progress.setDisable(true);
 		});
 		s.setOnFailed(fail -> {
 			actiontarget.setText("Failed: " + fail.getSource().getException());
 			convertButton.setDisable(false);
+			progress.setDisable(true);
 		});
 		s.start();
 	}
@@ -79,8 +90,11 @@ public class GuiController {
 		final int sampleRate = 22_050;
 		final int bitRate = 56 * 1024;
 
-		FFmpeg ffmpeg = new FFmpeg("./ffmpeg-3.4.2-64bit-static/ffmpeg");
-		FFprobe ffprobe = new FFprobe("./ffmpeg-3.4.2-64bit-static/ffprobe");
+//		FFmpeg ffmpeg = new FFmpeg("./ffmpeg-3.4.2-64bit-static/ffmpeg");
+//		FFprobe ffprobe = new FFprobe("./ffmpeg-3.4.2-64bit-static/ffprobe");
+		System.out.println(new File(".").getAbsolutePath());
+		FFmpeg ffmpeg = new FFmpeg("bin/ffmpeg");
+		FFprobe ffprobe = new FFprobe("bin/ffprobe");
 		final FFmpegProbeResult in = ffprobe.probe(source);
 		// Using the FFmpegProbeResult determine the duration of the input
 		final double duration_ns = in.getFormat().duration * TimeUnit.SECONDS.toNanos(1);
@@ -107,6 +121,18 @@ public class GuiController {
 			// " + progress);
 			onProgressPercent.accept(percent);
 		}).run();
-		System.out.println("done");
+	}
+
+	private static final class FfmpegConvertService extends Service<Void> {
+		@Override
+		protected Task<Void> createTask() {
+			return new Task<Void>() {
+				@Override
+				protected Void call() throws Exception {
+					doTheThing(percent -> updateProgress(percent, 100d));
+					return null;
+				}
+			};
+		}
 	}
 }

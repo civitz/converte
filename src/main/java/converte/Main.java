@@ -15,7 +15,7 @@ public class Main extends Application {
 
 		Parent root = FXMLLoader.load(getClass().getResource("/gui.fxml"));
 
-		Scene scene = new Scene(root, 300, 275);
+		Scene scene = new Scene(root, 800, 600);
 
 		primaryStage.setTitle("Converte");
 		primaryStage.setScene(scene);
