@@ -1,5 +1,6 @@
 package converte;
 
+import java.awt.image.SampleModel;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
@@ -20,6 +21,7 @@ import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.DragEvent;
@@ -105,11 +107,25 @@ public class GuiController implements Initializable {
 	private void onFrequencyChanged(ObservableValue<? extends Integer> observable, Integer before, Integer after) {
 		System.out.println(String.format("frequencyList: Observable %s, before %s,after %s", observable, before,after));
 		// if after is not null, deselect presets
+		if(after!=null) {
+			presetList.getSelectionModel().clearSelection();
+			SingleSelectionModel<Integer> selectedBitrate = bitrateList.getSelectionModel();
+			if(selectedBitrate.isEmpty()) {
+				selectedBitrate.select(0);
+			}
+		}
 	}
 
 	private void onBitrateChanged(ObservableValue<? extends Integer> observable, Integer before, Integer after) {
 		System.out.println(String.format("bitrateList: Observable %s, before %s,after %s", observable, before,after));
 		// if after is not null, deselect presets
+		if(after!=null) {
+			presetList.getSelectionModel().clearSelection();
+			SingleSelectionModel<Integer> selectedFrequency = frequencyList.getSelectionModel();
+			if(selectedFrequency.isEmpty()) {
+				selectedFrequency.select(0);
+			}
+		}
 	}
 
 	private void onPresetChanged(ObservableValue<? extends ConversionParameters> observable, ConversionParameters before,
@@ -117,6 +133,8 @@ public class GuiController implements Initializable {
 		System.out.println(String.format("presetList: Observable %s, before %s,after %s", observable, before,after));
 		if(after != null) {
 			//deselect from bitrate and sample rate
+			bitrateList.getSelectionModel().clearSelection();
+			frequencyList.getSelectionModel().clearSelection();
 		}
 	}
 	
@@ -164,7 +182,7 @@ public class GuiController implements Initializable {
 
 	@FXML
 	protected void convertAction(ActionEvent event) {
-		
+		// TODO: validate presence of all parameters
 		convertButton.setDisable(true);
 		ConversionParameters params = presetList.getValue();
 		int parallelism = Runtime.getRuntime().availableProcessors();
