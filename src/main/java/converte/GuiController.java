@@ -8,12 +8,14 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import converte.files.SimpleFileRecursiveFinder;
 import converte.utils.OsUtils;
 import javafx.application.Application.Parameters;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,6 +28,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.stage.DirectoryChooser;
 import javafx.scene.control.TextField;
@@ -102,6 +105,13 @@ public class GuiController implements Initializable {
 		frequencyList.valueProperty().addListener(this::onFrequencyChanged);
 		// set default
 		presetList.getSelectionModel().select(0);
+		tableView.setOnKeyPressed(keyEvent -> {
+			if(keyEvent.getCode().equals(KeyCode.DELETE)) {
+				ObservableList<SourceFile> selectedItems = tableView.getSelectionModel().getSelectedItems();
+				tableView.getItems().removeAll(selectedItems);
+			}
+		});
+		
 	}
 	
 	private void onFrequencyChanged(ObservableValue<? extends Integer> observable, Integer before, Integer after) {
