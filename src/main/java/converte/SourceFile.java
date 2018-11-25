@@ -6,10 +6,11 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 public class SourceFile {
-	private SimpleStringProperty name = new SimpleStringProperty("");
-	private SimpleStringProperty filename = new SimpleStringProperty("");
-	private SimpleDoubleProperty progress = new SimpleDoubleProperty(0L);
-	private SimpleStringProperty progressDetails = new SimpleStringProperty("");
+	private SimpleStringProperty name = new SimpleStringProperty("","name");
+	private SimpleStringProperty filename = new SimpleStringProperty("","filename");
+	private SimpleDoubleProperty progress = new SimpleDoubleProperty(0L, "progress");
+	private SimpleStringProperty progressDetails = new SimpleStringProperty("","progressDetails");
+	private SimpleStringProperty basePath = new SimpleStringProperty("", "basePath");
 
 	public SourceFile() {
 	}
@@ -22,36 +23,29 @@ public class SourceFile {
 		this.progressDetails.setValue(progressDetails);
 	}
 
-	public String getName() {
-		return name.getValue();
-	}
-
-	public String getFilename() {
-		return filename.getValue();
-	}
-
-	public Double getProgress() {
-		return progress.getValue();
-	}
-
-	public String getProgressDetails() {
-		return progressDetails.getValue();
-	}
-
-	public SimpleStringProperty getNameProperty() {
+	public SimpleStringProperty nameProperty() {
 		return name;
 	}
 
-	public SimpleStringProperty getFilenameProperty() {
+	public SimpleStringProperty filenameProperty() {
 		return filename;
 	}
 
-	public SimpleDoubleProperty getProgressProperty() {
+	public SimpleDoubleProperty progressProperty() {
 		return progress;
 	}
 
-	public SimpleStringProperty getProgressDetailsProperty() {
+	public SimpleStringProperty progressDetailsProperty() {
 		return progressDetails;
+	}
+	
+	public SimpleStringProperty basePathProperty() {
+		return basePath;
+	}
+
+	public SourceFile withBasePath(String basePath) {
+		this.basePath.setValue(basePath);
+		return this;
 	}
 
 	public static SourceFile fromPath(Path p) {
@@ -63,6 +57,6 @@ public class SourceFile {
 	@Override
 	public String toString() {
 		return "SourceFile [name=" + name + ", filename=" + filename + ", progress=" + progress + ", progressDetails="
-				+ progressDetails + "]";
+				+ progressDetails + ", basePath=" + basePath + "]";
 	}
 }

@@ -12,9 +12,15 @@ import converte.SourceFile;
 public class SimpleFileRecursiveFinder {
 	public static Stream<SourceFile> findRecursively(List<File> roots) {
 		return roots.stream()
-				.flatMap(SimpleFileRecursiveFinder::walk)
-				.filter(SimpleFileRecursiveFinder::isAudio)
-				.map(SourceFile::fromPath);
+				.flatMap(SimpleFileRecursiveFinder::findRecursively);
+	}
+
+	static Stream<SourceFile> findRecursively(File root) {
+		String basePath = root.getAbsolutePath();
+		return walk(root)
+			.filter(SimpleFileRecursiveFinder::isAudio)
+			.map(SourceFile::fromPath)
+			.map(sourceFile -> sourceFile.withBasePath(basePath));
 	}
 
 	static boolean isAudio(Path p) {
