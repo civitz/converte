@@ -44,7 +44,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 		<junit.version>4.12</junit.version>
-		<guava.version>21.0</guava.version>
+<!-- 		<guava.version>21.0</guava.version> -->
 		<ffmpeg.version>0.6.2</ffmpeg.version>
 		<immutables.version>2.7.3</immutables.version>
 		<assertj.version>3.5.2</assertj.version>
@@ -53,9 +53,6 @@
 	<profiles>
 		<profile>
 			<id>linux</id>
-			<activation>
-				<activeByDefault>true</activeByDefault>
-			</activation>
 			<properties>
 				<ffmpeg.zip.url>https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-64bit-static.tar.xz</ffmpeg.zip.url>
 				<ffmpeg.zip.md5>905cc873e338d26966557986c1db1b19</ffmpeg.zip.md5>
@@ -91,11 +88,11 @@
 			<version>${immutables.version}</version>
 			<scope>provided</scope>
 		</dependency>
-		<dependency>
-			<groupId>com.google.guava</groupId>
-			<artifactId>guava</artifactId>
-			<version>${guava.version}</version>
-		</dependency>
+<!-- 		<dependency> -->
+<!-- 			<groupId>com.google.guava</groupId> -->
+<!-- 			<artifactId>guava</artifactId> -->
+<!-- 			<version>${guava.version}</version> -->
+<!-- 		</dependency> -->
 		<dependency>
 			<groupId>net.bramp.ffmpeg</groupId>
 			<artifactId>ffmpeg</artifactId>

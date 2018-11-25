@@ -4,25 +4,16 @@ import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
-
-import com.google.common.util.concurrent.Uninterruptibles;
 
 import converte.files.SimpleFileRecursiveFinder;
 import converte.utils.OsUtils;
 import javafx.application.Application.Parameters;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
-import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -35,7 +26,6 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.Stage;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.ProgressBarTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -89,10 +79,10 @@ public class GuiController implements Initializable {
 		progressCol.setCellFactory(ProgressBarTableCell.<SourceFile>forTableColumn());
 		presetList.setConverter(new ConversionParametersStringConverter());
 		presetList.getItems().addAll(
-				new ConversionParameters("Low", 11025, 56*1024),
-				new ConversionParameters("Medium", 44100, 128*1024),
-				new ConversionParameters("High", 44100, 192*1024),
-				new ConversionParameters("CD", 44100, 320*1024)
+				ConversionParameters.of("Low", 11025, 56*1024),
+				ConversionParameters.of("Medium", 44100, 128*1024),
+				ConversionParameters.of("High", 44100, 192*1024),
+				ConversionParameters.of("CD", 44100, 320*1024)
 				);
 		presetList.valueProperty().addListener(this::onPresetChanged);
 		bitrateList.setConverter(new IntegerToStringConverter("k", 1024));
@@ -195,56 +185,6 @@ public class GuiController implements Initializable {
 			progress.setDisable(true);
 		});
 		conversionSErvice.start();
-	}
-
-	private static final class FfmpegConvertService extends Service<Void> {
-		private final ObservableList<SourceFile> items;
-		private final ConversionParameters params;
-		private int parallelism;
-		private Path destinationBase;
-		private FfmpegParameters ffmpegParams;
-
-		public FfmpegConvertService(ObservableList<SourceFile> items,FfmpegParameters ffmpegParams, ConversionParameters params, int parallelism, Path destinationBase) {
-			this.items = items;
-			this.params = params;
-			this.parallelism = parallelism;
-			this.destinationBase = destinationBase;
-			this.ffmpegParams = ffmpegParams;
-		}
-
-		@Override
-		protected Task<Void> createTask() {
-			return new Task<Void>() {
-				@Override
-				protected Void call() throws Exception {
-					updateProgress(0d, 100d);
-					AtomicInteger count = new AtomicInteger(1);
-					ExecutorService pool = Executors.newFixedThreadPool(parallelism);
-					for(SourceFile sf: items) {
-						CompletableFuture.runAsync(() -> convertSingleFile(sf,ffmpegParams, params, destinationBase), pool)
-							.thenRun(() -> {
-								updateProgress(count.incrementAndGet(), items.size());
-								System.out.println("updated total progress");
-							});
-					}
-					return null;
-				}
-			};
-		}
-	}
-	static void convertSingleFile(SourceFile sf, FfmpegParameters ffmpegParams, ConversionParameters params, Path destinationBase) {
-		try {
-			System.out.println("item: " + sf);
-			sf.progressDetailsProperty().setValue("Converting...");
-			File finalPath = Converter.doTheThing(percent -> sf.progressProperty().set(percent),ffmpegParams, params, sf, destinationBase);
-			sf.progressDetailsProperty().setValue("Converted to " + finalPath.getAbsolutePath());
-			sf.progressProperty().setValue(1d);
-			System.out.println("item: " + sf + " 100%");
-		} catch (Exception e) {
-			System.err.println("Error processing file " + sf);
-			e.printStackTrace();
-			sf.progressDetailsProperty().set("ERROR: " + e.getClass().getSimpleName() + " : " +e.getMessage());
-		}
 	}
 
 	@FXML public void openTargetChooser() {
