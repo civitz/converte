@@ -2,11 +2,9 @@ package converte;
 
 import java.io.File;
 import java.net.URL;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.ResourceBundle;
 import java.util.stream.Stream;
 
@@ -15,6 +13,9 @@ import org.slf4j.LoggerFactory;
 
 import converte.files.SimpleFileRecursiveFinder;
 import converte.utils.OsUtils;
+import io.vavr.control.Option;
+import io.vavr.control.Try;
+import io.vavr.control.Validation;
 import javafx.application.Application.Parameters;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
@@ -22,8 +23,12 @@ import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.TableColumn;
@@ -116,6 +121,7 @@ public class GuiController implements Initializable {
 				tableView.getItems().removeAll(selectedItems);
 			}
 		});
+		tableView.setPlaceholder(new Label("Drop files here"));
 	}
 	
 	private void onFrequencyChanged(ObservableValue<? extends Integer> observable, Integer before, Integer after) {
@@ -194,17 +200,29 @@ public class GuiController implements Initializable {
 
 	@FXML
 	protected void convertAction(ActionEvent event) {
-		// TODO: validate presence of all parameters
-		
-		
 		convertButton.setDisable(true);
-		Optional<ConversionParameters> maybeParams = Optional.ofNullable(presetList.getValue());
+		Option<ConversionParameters> maybeParams = getConversionParameters();
 		logger.info("Conversion parameters: {}", maybeParams);
+		Option<String> maybeDestinationBase = Option.of(targetPath.getText()).filter(s -> s != null && !s.isEmpty());
 		int parallelism = Runtime.getRuntime().availableProcessors();
 		logger.info("parallelism is {}", parallelism);
-		Path destinationBase = Paths.get(targetPath.getText());
-		Service<Void> conversionService = new FfmpegConvertService(tableView.getItems(), ffmpegParams, maybeParams.get(),
-				parallelism, destinationBase);
+		Validation.combine(
+				maybeParams.toValid("Missing conversion parameters (bitrate, sample rate)"),
+				maybeDestinationBase.toValid("Missing destination path"))
+			.ap((conversionParameters, destinationBase) ->  startConversionService(conversionParameters, destinationBase, parallelism))
+			.toEither()
+			.orElseRun(errors -> {
+				Alert alert = new Alert(AlertType.ERROR, errors.mkString("\n"), ButtonType.OK);
+				alert.showAndWait();
+				convertButton.setDisable(false);
+				progress.setDisable(true);
+			});
+	}
+
+	private Service<Void> startConversionService(ConversionParameters conversionParameters, String destinationBase,
+			int parallelism) {
+		Service<Void> conversionService = new FfmpegConvertService(tableView.getItems(), ffmpegParams, conversionParameters,
+			parallelism, Paths.get(destinationBase));
 		progress.progressProperty().bind(conversionService.progressProperty());
 		conversionService.setOnRunning(running -> {
 			progress.setDisable(false);
@@ -218,6 +236,17 @@ public class GuiController implements Initializable {
 			progress.setDisable(true);
 		});
 		conversionService.start();
+		return conversionService;
+	}
+
+	private Option<ConversionParameters> getConversionParameters() {
+		return Option.of(presetList.getValue())
+				.orElse(this::getCustomConversionParameters);
+	}
+
+	private Option<ConversionParameters> getCustomConversionParameters() {
+		return Try.of(() -> ConversionParameters.of("custom", frequencyList.getValue(), bitrateList.getValue()))
+				.toOption();
 	}
 
 	@FXML public void openTargetChooser() {
