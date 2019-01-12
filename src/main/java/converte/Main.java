@@ -2,6 +2,7 @@ package converte;
 
 import java.io.IOException;
 
+import converte.utils.Logging;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -29,6 +30,7 @@ public class Main extends Application {
 	}
 
 	public static void main(String[] args) throws IOException {
+		Logging.setupLogger();
 		launch(args);
 	}
 

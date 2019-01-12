@@ -47,6 +47,7 @@
 <!-- 		<guava.version>21.0</guava.version> -->
 		<ffmpeg.version>0.6.2</ffmpeg.version>
 		<immutables.version>2.7.3</immutables.version>
+		<slf4j.version>1.7.25</slf4j.version>
 		<assertj.version>3.5.2</assertj.version>
 	</properties>
 
@@ -97,6 +98,11 @@
 			<groupId>net.bramp.ffmpeg</groupId>
 			<artifactId>ffmpeg</artifactId>
 			<version>${ffmpeg.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.assertj</groupId>

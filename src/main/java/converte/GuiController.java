@@ -1,15 +1,17 @@
 package converte;
 
-import java.awt.image.SampleModel;
 import java.io.File;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.ResourceBundle;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import converte.files.SimpleFileRecursiveFinder;
 import converte.utils.OsUtils;
@@ -36,6 +38,8 @@ import javafx.scene.control.cell.ProgressBarTableCell;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 public class GuiController implements Initializable {
+	
+	private final Logger logger = LoggerFactory.getLogger(GuiController.class);
 
 	@FXML
 	private Button convertButton;
@@ -68,7 +72,7 @@ public class GuiController implements Initializable {
 
 	@Override
 	public void initialize(URL var1, ResourceBundle var2) {
-		System.out.println("initialize");
+		logger.debug("initialize");
 		if (OsUtils.isUnix()) {
 			this.ffmpegParams = FfmpegParameters.builder()
 					.ffmpegPath(Paths.get("ffmpeg-3.4.2-64bit-static/ffmpeg").toAbsolutePath().toString())
@@ -108,26 +112,27 @@ public class GuiController implements Initializable {
 		tableView.setOnKeyPressed(keyEvent -> {
 			if(keyEvent.getCode().equals(KeyCode.DELETE)) {
 				ObservableList<SourceFile> selectedItems = tableView.getSelectionModel().getSelectedItems();
+				logger.debug("Deleting selected items {}", selectedItems);
 				tableView.getItems().removeAll(selectedItems);
 			}
 		});
-		
 	}
 	
 	private void onFrequencyChanged(ObservableValue<? extends Integer> observable, Integer before, Integer after) {
-		System.out.println(String.format("frequencyList: Observable %s, before %s,after %s", observable, before,after));
+		logger.debug("frequencyList: Observable {}, before {},after {}", observable, before, after);
 		// if after is not null, deselect presets
 		if(after!=null) {
+			logger.debug("deselecting presets");
 			presetList.getSelectionModel().clearSelection();
 			SingleSelectionModel<Integer> selectedBitrate = bitrateList.getSelectionModel();
 			if(selectedBitrate.isEmpty()) {
+				logger.debug("pre-selecting bitrate");
 				selectedBitrate.select(0);
 			}
 		}
 	}
 
 	private void onBitrateChanged(ObservableValue<? extends Integer> observable, Integer before, Integer after) {
-		System.out.println(String.format("bitrateList: Observable %s, before %s,after %s", observable, before,after));
 		// if after is not null, deselect presets
 		if(after!=null) {
 			presetList.getSelectionModel().clearSelection();
@@ -140,7 +145,6 @@ public class GuiController implements Initializable {
 
 	private void onPresetChanged(ObservableValue<? extends ConversionParameters> observable, ConversionParameters before,
 			ConversionParameters after) {
-		System.out.println(String.format("presetList: Observable %s, before %s,after %s", observable, before,after));
 		if(after != null) {
 			//deselect from bitrate and sample rate
 			bitrateList.getSelectionModel().clearSelection();
@@ -149,7 +153,6 @@ public class GuiController implements Initializable {
 	}
 	
 	public void setParameters(Parameters parameters) {
-		System.out.println("set parameters");
 		for (Entry<String, String> entry : parameters.getNamed().entrySet()) {
 			switch (entry.getKey()) {
 			case "ffmpegPath":
@@ -159,7 +162,7 @@ public class GuiController implements Initializable {
 				ffmpegParams= ffmpegParams.withFfprobePath(entry.getValue());
 				break;
 			default: {
-				System.out.println("Ignoring parameter " + entry.getKey());
+				logger.debug("Ignoring parameter " + entry.getKey());
 			}
 				break;
 			}
@@ -176,12 +179,11 @@ public class GuiController implements Initializable {
 
 	@FXML
 	void listDropped(DragEvent de) {
-		System.out.println("called list dropped ");
 		Dragboard board = de.getDragboard();
 		List<File> phil = board.getFiles();
 		Stream<SourceFile> sourceFiles = SimpleFileRecursiveFinder.findRecursively(phil);
 		sourceFiles
-			.peek(el -> System.out.println(el))
+			.peek(el -> logger.info("Adding file {}", el))
 			.forEach(tableView.getItems()::add);
 
 		pathCol.prefWidthProperty().bind(tableView.widthProperty().divide(100/25));
@@ -193,26 +195,29 @@ public class GuiController implements Initializable {
 	@FXML
 	protected void convertAction(ActionEvent event) {
 		// TODO: validate presence of all parameters
+		
+		
 		convertButton.setDisable(true);
-		ConversionParameters params = presetList.getValue();
+		Optional<ConversionParameters> maybeParams = Optional.ofNullable(presetList.getValue());
+		logger.info("Conversion parameters: {}", maybeParams);
 		int parallelism = Runtime.getRuntime().availableProcessors();
-		System.out.println("parallelism is " + parallelism);
+		logger.info("parallelism is {}", parallelism);
 		Path destinationBase = Paths.get(targetPath.getText());
-		Service<Void> conversionSErvice = new FfmpegConvertService(tableView.getItems(), ffmpegParams, params,
+		Service<Void> conversionService = new FfmpegConvertService(tableView.getItems(), ffmpegParams, maybeParams.get(),
 				parallelism, destinationBase);
-		progress.progressProperty().bind(conversionSErvice.progressProperty());
-		conversionSErvice.setOnRunning(running -> {
+		progress.progressProperty().bind(conversionService.progressProperty());
+		conversionService.setOnRunning(running -> {
 			progress.setDisable(false);
 		});
-		conversionSErvice.setOnSucceeded(success -> {
+		conversionService.setOnSucceeded(success -> {
 			convertButton.setDisable(false);
 			progress.setDisable(true);
 		});
-		conversionSErvice.setOnFailed(fail -> {
+		conversionService.setOnFailed(fail -> {
 			convertButton.setDisable(false);
 			progress.setDisable(true);
 		});
-		conversionSErvice.start();
+		conversionService.start();
 	}
 
 	@FXML public void openTargetChooser() {
