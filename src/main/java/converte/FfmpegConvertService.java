@@ -8,11 +8,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
 final class FfmpegConvertService extends Service<Void> {
+
+	private final Logger logger = LoggerFactory.getLogger(FfmpegConvertService.class);
 
 	private final ObservableList<SourceFile> items;
 	private final ConversionParameters params;
@@ -44,13 +50,17 @@ final class FfmpegConvertService extends Service<Void> {
 				CompletableFuture.supplyAsync(() -> determineOutputPathAndCreateDirs(sf))
 					.thenRunAsync(convertSingleFile(sf, outputPath), pool)
 					.thenRun(() -> {
+						logger.info("Converted file {}, updating progress ", sf);
 						sf.progressDetailsProperty().setValue("Converted to " + outputPath.toString());
 						sf.progressProperty().setValue(1d);
 						updateProgress(count.incrementAndGet(), items.size());
 					})
 					.exceptionally(exception -> {
-						sf.progressDetailsProperty().set("ERROR: " + exception.getClass().getSimpleName() + " : " +exception.getMessage());
-						return (Void ) null;
+						logger.error("Exception handling source {}", sf, exception);
+						sf.progressDetailsProperty().set("ERROR: " + exception.getClass().getSimpleName()
+								+ " : " + exception.getMessage());
+						updateProgress(count.incrementAndGet(), items.size());
+						return (Void) null;
 					});
 			}
 			return null;
@@ -63,23 +73,26 @@ final class FfmpegConvertService extends Service<Void> {
 			Files.createDirectories(outputFilePath.getParent());
 			return outputFilePath;
 		} catch (Exception ex) {
-			System.err.println("Error creating parent directories for " + sf);
+			logger.error("Error creating parent directories for {}", sf);
 			ex.printStackTrace();
 			throw new RuntimeException("Error creating parent directories for " + sf, ex);
 		}
 	}
-	
+
 	Runnable convertSingleFile(SourceFile sf, Path outputFile) {
-		try {
-			sf.progressDetailsProperty().setValue("Converting...");
-			return Converter.convert(percent -> sf.progressProperty().set(percent),ffmpegParams, params, sf, outputFile);
-		} catch (Exception e) {
-			System.err.println("Error processing file " + sf);
-			e.printStackTrace();
-			throw new RuntimeException("Error processing file " + sf, e);
-		}
+		return () -> {
+			try {
+				sf.progressDetailsProperty().setValue("Converting...");
+				Converter.convert(percent -> sf.progressProperty().set(percent), ffmpegParams, params, sf, outputFile)
+						.run();
+			} catch (Exception e) {
+				logger.error("Error processing file {}", sf);
+				e.printStackTrace();
+				throw new RuntimeException("Error processing file " + sf, e);
+			}
+		};
 	}
-	
+
 	static Path outputFilePath(SourceFile sourceFile, Path destinationBase) {
 		String sourcePath = sourceFile.filenameProperty().get();
 		Path baseSourcePath = Paths.get(sourceFile.basePathProperty().get());

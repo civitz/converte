@@ -204,7 +204,7 @@ public class GuiController implements Initializable {
 		Option<ConversionParameters> maybeParams = getConversionParameters();
 		logger.info("Conversion parameters: {}", maybeParams);
 		Option<String> maybeDestinationBase = Option.of(targetPath.getText()).filter(s -> s != null && !s.isEmpty());
-		int parallelism = Runtime.getRuntime().availableProcessors();
+		int parallelism = Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
 		logger.info("parallelism is {}", parallelism);
 		Validation.combine(
 				maybeParams.toValid("Missing conversion parameters (bitrate, sample rate)"),

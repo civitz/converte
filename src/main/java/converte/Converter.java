@@ -21,7 +21,7 @@ public class Converter {
 
 	public static Runnable convert(Consumer<Double> onProgressPercent, FfmpegParameters ffmpegParams,
 			ConversionParameters params, SourceFile sourceFile, Path outputFile) throws IOException {
-		final String sourcePath = sourceFile.filenameProperty().get();
+		final String sourcePath = "\""+sourceFile.filenameProperty().get()+"\"";
 		final String outputPath = outputFile.toString();
 		final int channels = params.getChannels() == Channels.MONO ? 1 : 2;
 		final int sampleRate = params.getSampleRate();
