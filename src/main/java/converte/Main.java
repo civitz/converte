@@ -2,7 +2,6 @@ package converte;
 
 import java.io.IOException;
 
-import converte.utils.Logging;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -15,7 +14,7 @@ public class Main extends Application {
 	@Override
 	public void start(Stage primaryStage) throws Exception {
 
-		FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/gui.fxml"));
+		FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("gui.fxml"));
 		Parent root = fxmlLoader.load();
 		GuiController controller = fxmlLoader.getController();
 		controller.setParameters(getParameters());
@@ -30,7 +29,6 @@ public class Main extends Application {
 	}
 
 	public static void main(String[] args) throws IOException {
-		Logging.setupLogger();
 		launch(args);
 	}
 

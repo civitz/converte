@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import converte.files.SimpleFileRecursiveFinder;
 import converte.utils.OsUtils;
+import converte.utils.Logging;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import io.vavr.control.Validation;
@@ -77,6 +78,7 @@ public class GuiController implements Initializable {
 
 	@Override
 	public void initialize(URL var1, ResourceBundle var2) {
+		Logging.setupLogger();
 		logger.debug("initialize");
 		if (OsUtils.isUnix()) {
 			this.ffmpegParams = FfmpegParameters.builder()
