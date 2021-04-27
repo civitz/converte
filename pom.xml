@@ -29,16 +29,26 @@
 	</licenses>
 
 	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<maven.compiler.release>11</maven.compiler.release>
-        <javafx.version>13</javafx.version>
-		<junit.version>4.12</junit.version>
- 		<guava.version>20.0</guava.version>
-		<ffmpeg.version>0.6.2</ffmpeg.version>
-		<immutables.version>2.7.3</immutables.version>
-		<slf4j.version>1.7.29</slf4j.version>
-		<vavr.version>0.10.2</vavr.version>
-		<assertj.version>3.5.2</assertj.version>
+	        <client.target>host</client.target>
+	        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	        <maven.compiler.release>11</maven.compiler.release>
+	        <javafx.version>16</javafx.version>
+	        <charm.version>6.0.6</charm.version>
+	        <glisten.afterburner.version>2.0.5</glisten.afterburner.version>
+	        <attach.version>4.0.11</attach.version>
+	        <connect.version>2.0.1</connect.version>
+	        <javafx.maven.plugin.version>0.0.6</javafx.maven.plugin.version>
+	        <client.maven.plugin.version>0.1.38</client.maven.plugin.version>
+	        <main.class>converte.Main</main.class>
+	        <win.dist.version>1.0</win.dist.version>
+	        <junit.version>4.12</junit.version>
+	        <guava.version>20.0</guava.version>
+	        <ffmpeg.version>0.6.2</ffmpeg.version>
+	        <immutables.version>2.7.3</immutables.version>
+	        <slf4j.version>2.0.0-alpha1</slf4j.version>
+	        <vavr.version>0.10.2</vavr.version>
+	        <assertj.version>3.5.2</assertj.version>
+	        <jpackage.app.name>Converte</jpackage.app.name>
 	</properties>
 	
 
@@ -70,12 +80,6 @@
 	</profiles>
 
 	<dependencies>
-		
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-base</artifactId>
-            <version>${javafx.version}</version>
-		</dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
@@ -86,12 +90,6 @@
             <artifactId>javafx-fxml</artifactId>
             <version>${javafx.version}</version>
 		</dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>${javafx.version}</version>
-            <classifier>win</classifier>
-        </dependency>
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -109,11 +107,11 @@
 			<artifactId>vavr</artifactId>
 			<version>${vavr.version}</version>
 		</dependency>
- 		<dependency>
- 			<groupId>com.google.guava</groupId>
- 			<artifactId>guava</artifactId>
- 			<version>${guava.version}</version>
- 		</dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.google.guava</groupId>-->
+<!--            <artifactId>guava</artifactId>-->
+<!--            <version>${guava.version}</version>-->
+<!--        </dependency>-->
 		<dependency>
 			<groupId>net.bramp.ffmpeg</groupId>
 			<artifactId>ffmpeg</artifactId>
@@ -126,7 +124,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
+			<artifactId>slf4j-jdk14</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
 		<dependency>
@@ -142,6 +140,96 @@
 		<finalName>converte</finalName>
 		<defaultGoal>clean package</defaultGoal>
 		<plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+<!--                <version>3.1.2</version>-->
+                <executions>
+                    <execution>
+                        <id>copy-dependencies</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/deps</outputDirectory>
+                            <overWriteReleases>false</overWriteReleases>
+                            <overWriteSnapshots>true</overWriteSnapshots>
+                            <excludeTransitive>false</excludeTransitive>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.moditect</groupId>
+                <artifactId>moditect-maven-plugin</artifactId>
+                <version>1.0.0.Beta2</version>
+                <executions>
+                    <execution>
+                        <id>add-module-infos</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>add-module-info</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/modules</outputDirectory>
+                            <modules>
+                                <module>
+                                    <artifact>
+                                        <groupId>com.google.guava</groupId>
+                                        <artifactId>guava</artifactId>
+                                        <version>${guava.version}</version>
+                                    </artifact>
+<!--                                    <moduleInfoSource>-->
+<!--                                        module guava {-->
+<!--                                        requires java.logging;-->
+<!--                                        exports com.example.api;-->
+<!--                                        provides com.example.api.SomeService-->
+<!--                                        with com.example.internal.SomeServiceImpl;-->
+<!--                                        }-->
+<!--                                    </moduleInfoSource>-->
+                                    <moduleInfoSource>
+                                        module guava {
+                                            exports com.google.common.base;
+                                        }
+                                    </moduleInfoSource>
+                                </module>
+                                <module>
+                                    <artifact>
+                                        <groupId>net.bramp.ffmpeg</groupId>
+                                        <artifactId>ffmpeg</artifactId>
+                                        <version>${ffmpeg.version}</version>
+                                    </artifact>
+                                    <moduleInfoSource>
+                                        module ffmpeg {
+                                        requires guava;
+                                        exports net.bramp.ffmpeg;
+                                        exports net.bramp.ffmpeg.probe;
+                                        exports net.bramp.ffmpeg.builder;
+                                        exports net.bramp.ffmpeg.progress;
+                                        }
+                                    </moduleInfoSource>
+                                </module>
+                                <module>
+                                    <artifact>
+                                        <groupId>io.vavr</groupId>
+                                        <artifactId>vavr</artifactId>
+                                        <version>${vavr.version}</version>
+                                    </artifact>
+                                    <moduleInfoSource>
+                                        module vavr {
+                                        exports io.vavr;
+                                        exports io.vavr.control;
+                                        exports io.vavr.collection;
+                                        }
+                                    </moduleInfoSource>
+                                </module>
+                            </modules>
+                            <overwriteExistingFiles>true</overwriteExistingFiles>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
 			<plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -156,6 +244,10 @@
 							<version>${immutables.version}</version>
                         </dependency>
                     </annotationProcessorPaths>
+                    <compilerArguments>
+                        <p>${project.build.directory}/modules</p>
+                        <p>${project.build.directory}/deps</p>
+                    </compilerArguments>
                 </configuration>
             </plugin>
 			<plugin>
@@ -185,62 +277,86 @@
 					</dependency>
 				</dependencies>
 			</plugin>
-			<!-- <plugin>
-				<groupId>org.moditect</groupId>
-				<artifactId>moditect-maven-plugin</artifactId>
-				<version>1.0.0.Beta2</version>
-				<executions>
-					<execution>
-						<id>add-module-infos</id>
-						<phase>generate-resources</phase>
-						<goals>
-							<goal>add-module-info</goal>
-						</goals>
-						<configuration>
-							<outputDirectory>${project.build.directory}/modules</outputDirectory>
-							<modules>
-								<module>
-									<artifact>
-										<groupId>net.bramp.ffmpeg</groupId>
-										<artifactId>ffmpeg</artifactId>
-										<version>${ffmpeg.version}</version>
-									</artifact>
-									<moduleInfoSource>
-										module net.bramp.ffmpeg {
-											exports net.bramp.ffmpeg;
-										}
-									</moduleInfoSource> 
-								</module>
-								 <module>
-									<artifact>
-										<groupId>io.vavr</groupId>
-										<artifactId>vavr</artifactId>
-										<version>${vavr.version}</version>
-									</artifact>
-									<moduleInfoSource>
-										module io.vavr {
-											exports io.vavr
-										}
-									</moduleInfoSource> 
-								</module>
-							</modules>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin> -->
+			<plugin>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                  <execution>
+                    <id>default-jar</id>
+                    <phase>none</phase>
+                    <configuration>
+                      <finalName>unwanted</finalName>
+                      <classifier>unwanted</classifier>
+                    </configuration>
+                  </execution>
+                </executions>
+              </plugin>
+			
 			 <plugin>
 		        <groupId>org.openjfx</groupId>
 		        <artifactId>javafx-maven-plugin</artifactId>
-		        <version>0.0.4</version>
-		        <configuration>
-					
-					<source>${maven.compiler.release}</source>
-					<target>${maven.compiler.release}</target>
-					<release>${maven.compiler.release}</release>
-					<mainClass>converte.Main</mainClass>
-					<launcher>converte</launcher>
-		        </configuration>
+                <version>${javafx.maven.plugin.version}</version>
+				<configuration>
+                    <mainClass>${main.class}</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>jpackage</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jlink</goal>
+                        </goals>
+                        <configuration>
+                            <jlinkVerbose>true</jlinkVerbose>
+<!--                            <commandlineArgs>&#45;&#45;module-path ${project.build.directory}\modules</commandlineArgs>-->
+                            <jmodsPath>${project.build.directory}/modules</jmodsPath>
+                        </configuration>
+                    </execution>
+                </executions>
 			</plugin>
+			<plugin>
+                <!-- https://www.devdungeon.com/content/use-jpackage-create-native-java-app-installers -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>jpackage</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <exec dir="${project.build.directory}" executable="jpackage">
+                                    <arg line="--runtime-image image" />
+                                    <arg line="--module converte/converte.Main" />
+                                    <arg value="--win-dir-chooser" />
+                                    <arg value="--win-shortcut" />
+                                    <arg line="--app-version ${win.dist.version}"/>
+                                    <arg line="--name ${jpackage.app.name}"/>
+                                </exec>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- <plugin>
+                
+                <groupId>com.gluonhq</groupId>
+                <artifactId>client-maven-plugin</artifactId>
+                <version>${client.maven.plugin.version}</version>
+                <configuration>
+                    <target>${client.target}</target>
+                    <mainClass>${main.class}</mainClass>
+                    <bundlesList>
+                        <list>hellofx.hello</list>
+                    </bundlesList>
+                    <reflectionList>
+                        <list>hellofx.HelloController</list>
+                    </reflectionList>
+                </configuration>
+            </plugin> -->
 		</plugins>
 	</build>
 	<scm>
@@ -249,4 +365,3 @@
 		<url>http://github.com/civitz/converte/tree/master</url>
 	</scm>
 </project>
-

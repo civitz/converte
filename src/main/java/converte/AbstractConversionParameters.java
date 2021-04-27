@@ -4,7 +4,7 @@ import org.immutables.value.Value;
 import org.immutables.value.Value.Default;
 
 @Value.Immutable
-@Value.Style(allMandatoryParameters = true, typeAbstract = "Abstract*", typeImmutable = "*")
+@Value.Style(allMandatoryParameters = true, typeAbstract = "Abstract*", typeImmutable = "*", jdkOnly = true)
 public interface AbstractConversionParameters {
 
 	public String getName();

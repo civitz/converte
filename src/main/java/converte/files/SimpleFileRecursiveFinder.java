@@ -1,13 +1,13 @@
 package converte.files;
 
+import converte.SourceFile;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
-
-import converte.SourceFile;
 
 public class SimpleFileRecursiveFinder {
 	public static Stream<SourceFile> findRecursively(List<File> roots) {

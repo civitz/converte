@@ -1,5 +1,11 @@
 package converte;
 
+import javafx.collections.ObservableList;
+import javafx.concurrent.Service;
+import javafx.concurrent.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -7,14 +13,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javafx.application.Platform;
-import javafx.collections.ObservableList;
-import javafx.concurrent.Service;
-import javafx.concurrent.Task;
 
 final class FfmpegConvertService extends Service<Void> {
 

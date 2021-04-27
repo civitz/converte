@@ -1,9 +1,9 @@
 package converte;
 
-import java.nio.file.Path;
-
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
+
+import java.nio.file.Path;
 
 public class SourceFile {
 	private SimpleStringProperty name = new SimpleStringProperty("","name");

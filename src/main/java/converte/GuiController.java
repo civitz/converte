@@ -1,19 +1,8 @@
 package converte;
 
-import java.io.File;
-import java.net.URL;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Map.Entry;
-import java.util.ResourceBundle;
-import java.util.stream.Stream;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import converte.files.SimpleFileRecursiveFinder;
-import converte.utils.OsUtils;
 import converte.utils.Logging;
+import converte.utils.OsUtils;
 import io.vavr.control.Option;
 import io.vavr.control.Try;
 import io.vavr.control.Validation;
@@ -24,24 +13,25 @@ import javafx.concurrent.Service;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Alert;
+import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.SingleSelectionModel;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.cell.ProgressBarTableCell;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.stage.DirectoryChooser;
-import javafx.scene.control.TextField;
-import javafx.scene.control.cell.ProgressBarTableCell;
-import javafx.scene.control.cell.PropertyValueFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.net.URL;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map.Entry;
+import java.util.ResourceBundle;
+import java.util.stream.Stream;
 
 public class GuiController implements Initializable {
 	

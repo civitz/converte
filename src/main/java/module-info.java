@@ -5,11 +5,10 @@ module converte {
     requires javafx.fxml;
     requires javafx.graphics;
     requires static org.immutables.value;
-    requires vavr;
     requires ffmpeg;
-    requires guava;
-    requires log4j;
+//    requires guava;
+    requires vavr;
 
+    opens converte to javafx.fxml;
     exports converte;
-    opens converte;
 }

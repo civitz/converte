@@ -92,4 +92,6 @@ hs_err_pid*
 .classpath
 .project
 
+*.iml
+
 downloaded-bin

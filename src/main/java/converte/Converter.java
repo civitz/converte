@@ -1,19 +1,18 @@
 package converte;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import converte.AbstractConversionParameters.Channels;
 import net.bramp.ffmpeg.FFmpeg;
 import net.bramp.ffmpeg.FFmpegExecutor;
 import net.bramp.ffmpeg.FFprobe;
 import net.bramp.ffmpeg.builder.FFmpegBuilder;
 import net.bramp.ffmpeg.probe.FFmpegProbeResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 public class Converter {
 
